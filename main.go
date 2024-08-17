@@ -1,7 +1,9 @@
 package main
 
-import "main.go/telegram"
+import (
+	"main.go/utils"
+)
 
 func main() {
-	telegram.SendMessage()
+	utils.CrawlPage(1)
 }
