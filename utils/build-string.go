@@ -10,5 +10,4 @@ func BuildProductString(product Product) string {
 	res := []string{상품명, 가격, 링크}
 
 	return strings.Join(res, "\n")
-
 }

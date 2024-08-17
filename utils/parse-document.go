@@ -14,14 +14,14 @@ type Product struct {
 	isSoldOut     bool
 }
 
-func ParseDocument(document *html.Node) []Product {
+func parseDocument(document *html.Node) []Product {
 	res := []Product{}
 
 	var parse func(*html.Node)
 
 	parse = func(n *html.Node) {
 		if hasClass(n, "item-pay") && hasClass(n.Parent.Parent, "item-detail") {
-			itemInfo := ExtractProductInfo(n)
+			itemInfo := extractProductInfo(n)
 
 			if n.Parent.Data == "a" {
 				href := n.Parent.Attr[0].Val
@@ -42,7 +42,7 @@ func ParseDocument(document *html.Node) []Product {
 	return res
 }
 
-func ExtractProductInfo(n *html.Node) *Product {
+func extractProductInfo(n *html.Node) *Product {
 	product := Product{}
 
 	if n.Type == html.TextNode && strings.TrimSpace(n.Data) == "SOLDOUT" {
@@ -63,7 +63,7 @@ func ExtractProductInfo(n *html.Node) *Product {
 	}
 
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		info := ExtractProductInfo(c)
+		info := extractProductInfo(c)
 
 		if product.Name == "" {
 			product.Name = info.Name

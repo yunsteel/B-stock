@@ -37,7 +37,7 @@ func CrawlPage(page int) []Product {
 		panic(err)
 	}
 
-	productList := ParseDocument(doc)
+	productList := parseDocument(doc)
 
 	return productList
 }

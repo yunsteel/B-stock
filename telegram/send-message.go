@@ -34,9 +34,7 @@ func SendMessage() {
 		if update.Message != nil {
 			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-			selectedItems := utils.Filter(func(product utils.Product) bool {
-				return strings.Contains(strings.ToLower(product.Name), strings.ToLower(update.Message.Text))
-			}, inStockItems)
+			selectedItems := utils.SelectProductByKeyword(update.Message.Text, inStockItems)
 
 			if len(selectedItems) == 0 {
 				return
@@ -44,10 +42,10 @@ func SendMessage() {
 
 			items := utils.Map(utils.BuildProductString, selectedItems)
 
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, strings.Join(items, "\n\n"))
-			msg.ReplyToMessageID = update.Message.MessageID
+			message := tgbotapi.NewMessage(update.Message.Chat.ID, strings.Join(items, "\n\n"))
+			message.ReplyToMessageID = update.Message.MessageID
 
-			bot.Send(msg)
+			bot.Send(message)
 		}
 	}
 }
