@@ -1,5 +1,7 @@
 package main
 
-func main() {
+import "main.go/telegram"
 
+func main() {
+	telegram.SendMessage()
 }
