@@ -20,16 +20,16 @@ func parseDocument(document *html.Node) []Product {
 	var parse func(*html.Node)
 
 	parse = func(n *html.Node) {
-		if hasClass(n, "item-pay") && hasClass(n.Parent.Parent, "item-detail") {
-			itemInfo := extractProductInfo(n)
+		if isProductDetailNode(n) {
+			product := extractProduct(n)
 
 			if n.Parent.Data == "a" {
 				href := n.Parent.Attr[0].Val
-				itemInfo.Link = getSiteURL() + href
+				product.Link = getSiteURL() + href
 			}
 
-			if !itemInfo.isSoldOut {
-				res = append(res, *itemInfo)
+			if !product.isSoldOut {
+				res = append(res, *product)
 			}
 		}
 
@@ -42,28 +42,29 @@ func parseDocument(document *html.Node) []Product {
 	return res
 }
 
-func extractProductInfo(n *html.Node) *Product {
+func extractProduct(n *html.Node) *Product {
 	product := Product{}
 
-	if n.Type == html.TextNode && strings.TrimSpace(n.Data) == "SOLDOUT" {
+	if isSoldOut(n) {
 		product.isSoldOut = true
 	}
 
 	if n.Type == html.ElementNode {
-		switch n.Data {
-		case "h2":
-			product.Name = strings.TrimSpace(n.FirstChild.Data)
-		default:
-			if hasClass(n, "sale_pay") {
-				product.RegularPrice = strings.TrimSpace(n.FirstChild.Data)
-			} else if hasClass(n, "pay") && hasClass(n, "inline-blocked") {
-				product.DiscountPrice = strings.TrimSpace(n.FirstChild.Data)
-			}
+		firstChildData := strings.TrimSpace(n.FirstChild.Data)
+
+		if n.Data == "h2" {
+			product.Name = firstChildData
+
+		} else if isRegularPriceNode(n) {
+			product.RegularPrice = firstChildData
+
+		} else if isDiscountPriceNode(n) {
+			product.DiscountPrice = firstChildData
 		}
 	}
 
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		info := extractProductInfo(c)
+		info := extractProduct(c)
 
 		if product.Name == "" {
 			product.Name = info.Name
@@ -94,4 +95,20 @@ func hasClass(n *html.Node, className string) bool {
 		}
 	}
 	return false
+}
+
+func isSoldOut(n *html.Node) bool {
+	return n.Type == html.TextNode && strings.TrimSpace(n.Data) == "SOLDOUT"
+}
+
+func isProductDetailNode(n *html.Node) bool {
+	return hasClass(n, "item-pay") && hasClass(n.Parent.Parent, "item-detail")
+}
+
+func isRegularPriceNode(n *html.Node) bool {
+	return hasClass(n, "sale_pay")
+}
+
+func isDiscountPriceNode(n *html.Node) bool {
+	return hasClass(n, "pay") && hasClass(n, "inline-blocked")
 }
