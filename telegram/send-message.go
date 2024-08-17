@@ -9,19 +9,44 @@ import (
 	"main.go/utils"
 )
 
-func SendMessage() {
+var bot *tgbotapi.BotAPI
+
+func loadTelegramBot() {
 	utils.LoadDotEnv()
 	token := os.Getenv("TELEGRAM_TOKEN")
 
-	bot, err := tgbotapi.NewBotAPI(token)
+	tgbot, err := tgbotapi.NewBotAPI(token)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	bot.Debug = true
+	tgbot.Debug = true
 
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	log.Printf("Authorized on account %s", tgbot.Self.UserName)
+
+	bot = tgbot
+}
+
+func sendMessage(update tgbotapi.Update, inStockItems []utils.Product) {
+	log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+
+	selectedItems := utils.SelectProductByKeyword(update.Message.Text, inStockItems)
+
+	if len(selectedItems) == 0 {
+		return
+	}
+
+	items := utils.Map(utils.BuildProductString, selectedItems)
+
+	message := tgbotapi.NewMessage(update.Message.Chat.ID, strings.Join(items, "\n\n"))
+	message.ReplyToMessageID = update.Message.MessageID
+
+	bot.Send(message)
+}
+
+func Run() {
+	loadTelegramBot()
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
@@ -32,20 +57,7 @@ func SendMessage() {
 
 	for update := range updates {
 		if update.Message != nil {
-			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
-			selectedItems := utils.SelectProductByKeyword(update.Message.Text, inStockItems)
-
-			if len(selectedItems) == 0 {
-				return
-			}
-
-			items := utils.Map(utils.BuildProductString, selectedItems)
-
-			message := tgbotapi.NewMessage(update.Message.Chat.ID, strings.Join(items, "\n\n"))
-			message.ReplyToMessageID = update.Message.MessageID
-
-			bot.Send(message)
+			sendMessage(update, inStockItems)
 		}
 	}
 }
