@@ -7,7 +7,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-func Crawl(page int) []string {
+func CrawlPage(page int) []string {
 	url := "https://www.swingguitars.com/612/?&page=" + strconv.Itoa(page) + "&sort=recent"
 	client := &http.Client{}
 
@@ -35,4 +35,17 @@ func Crawl(page int) []string {
 	list := ParseDocument(doc)
 
 	return list
+}
+
+func GetInStockItems() []string {
+	const MAX_AVAILABLE_PAGE = 5
+
+	inStockItems := []string{}
+
+	for i := 1; i <= MAX_AVAILABLE_PAGE; i++ {
+		page := CrawlPage(i)
+		inStockItems = append(inStockItems, page...)
+	}
+
+	return inStockItems
 }
