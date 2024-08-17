@@ -7,10 +7,11 @@ import (
 )
 
 type Product struct {
-	Name           string
-	Regular_Price  string
-	Discount_Price string
-	Is_Sold_Out    bool
+	Name          string
+	RegularPrice  string
+	DiscountPrice string
+	Link          string
+	isSoldOut     bool
 }
 
 func ParseDocument(document *html.Node) []Product {
@@ -21,8 +22,14 @@ func ParseDocument(document *html.Node) []Product {
 	parse = func(n *html.Node) {
 		if hasClass(n, "item-pay") && hasClass(n.Parent.Parent, "item-detail") {
 			itemInfo := ExtractProductInfo(n)
-			if !itemInfo.Is_Sold_Out {
-				res = append(res, ExtractProductInfo(n))
+
+			if n.Parent.Data == "a" {
+				href := n.Parent.Attr[0].Val
+				itemInfo.Link = getSiteURL() + href
+			}
+
+			if !itemInfo.isSoldOut {
+				res = append(res, *itemInfo)
 			}
 		}
 
@@ -35,12 +42,11 @@ func ParseDocument(document *html.Node) []Product {
 	return res
 }
 
-func ExtractProductInfo(n *html.Node) Product {
-
+func ExtractProductInfo(n *html.Node) *Product {
 	product := Product{}
 
 	if n.Type == html.TextNode && strings.TrimSpace(n.Data) == "SOLDOUT" {
-		product.Is_Sold_Out = true
+		product.isSoldOut = true
 	}
 
 	if n.Type == html.ElementNode {
@@ -49,9 +55,9 @@ func ExtractProductInfo(n *html.Node) Product {
 			product.Name = strings.TrimSpace(n.FirstChild.Data)
 		default:
 			if hasClass(n, "sale_pay") {
-				product.Regular_Price = strings.TrimSpace(n.FirstChild.Data)
+				product.RegularPrice = strings.TrimSpace(n.FirstChild.Data)
 			} else if hasClass(n, "pay") && hasClass(n, "inline-blocked") {
-				product.Discount_Price = strings.TrimSpace(n.FirstChild.Data)
+				product.DiscountPrice = strings.TrimSpace(n.FirstChild.Data)
 			}
 		}
 	}
@@ -62,18 +68,21 @@ func ExtractProductInfo(n *html.Node) Product {
 		if product.Name == "" {
 			product.Name = info.Name
 		}
-		if product.Regular_Price == "" {
-			product.Regular_Price = info.Regular_Price
+		if product.RegularPrice == "" {
+			product.RegularPrice = info.RegularPrice
 		}
-		if product.Discount_Price == "" {
-			product.Discount_Price = info.Discount_Price
+		if product.DiscountPrice == "" {
+			product.DiscountPrice = info.DiscountPrice
 		}
-		if info.Is_Sold_Out {
-			product.Is_Sold_Out = true
+		if product.Link == "" {
+			product.Link = info.Link
+		}
+		if info.isSoldOut {
+			product.isSoldOut = true
 		}
 	}
 
-	return product
+	return &product
 }
 
 func hasClass(n *html.Node, className string) bool {

@@ -7,8 +7,12 @@ import (
 	"golang.org/x/net/html"
 )
 
+func getSiteURL() string {
+	return "https://www.swingguitars.com/612"
+}
+
 func CrawlPage(page int) []Product {
-	url := "https://www.swingguitars.com/612/?&page=" + strconv.Itoa(page) + "&sort=recent"
+	url := getSiteURL() + "/?&page=" + strconv.Itoa(page) + "&sort=recent"
 	client := &http.Client{}
 
 	req, err := http.NewRequest("GET", url, nil)
