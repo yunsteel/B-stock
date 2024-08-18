@@ -50,16 +50,15 @@ func extractProduct(n *html.Node) *Product {
 	}
 
 	if n.Type == html.ElementNode {
-		firstChildData := strings.TrimSpace(n.FirstChild.Data)
-
 		if n.Data == "h2" {
-			product.Name = firstChildData
+			product.Name = strings.TrimSpace(n.FirstChild.Data)
+		}
 
-		} else if isRegularPriceNode(n) {
-			product.RegularPrice = firstChildData
+		if isRegularPriceNode(n) {
+			product.RegularPrice = strings.TrimSpace(n.FirstChild.Data)
 
 		} else if isDiscountPriceNode(n) {
-			product.DiscountPrice = firstChildData
+			product.DiscountPrice = strings.TrimSpace(n.FirstChild.Data)
 		}
 	}
 
