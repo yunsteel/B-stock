@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	telegram.Run("jazz")
+	telegram.Run("JAZZKING")
 }
