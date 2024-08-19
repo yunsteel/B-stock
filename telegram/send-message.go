@@ -1,63 +1,76 @@
 package telegram
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"main.go/utils"
 )
 
-var bot *tgbotapi.BotAPI
-
-func loadTelegramBot() {
+func Run(keyword string) {
 	utils.LoadDotEnv()
 	token := os.Getenv("TELEGRAM_TOKEN")
 
-	tgbot, err := tgbotapi.NewBotAPI(token)
+	res, err := http.Get("https://api.telegram.org/bot" + token + "/getUpdates")
 
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
-	tgbot.Debug = true
+	defer res.Body.Close()
 
-	log.Printf("Authorized on account %s", tgbot.Self.UserName)
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Panic(err)
+	}
 
-	bot = tgbot
-}
+	var update Update
+	json.Unmarshal(body, &update)
 
-func sendMessage(update tgbotapi.Update, inStockItems []utils.Product) {
-	log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
-	selectedItems := utils.SelectProductByKeyword(update.Message.Text, inStockItems)
-
-	if len(selectedItems) == 0 {
+	if !update.Ok {
 		return
 	}
 
-	items := utils.Map(utils.BuildProductString, selectedItems)
+	chatIds := []string{}
+	for _, res := range update.Result {
+		chatIds = append(chatIds, strconv.Itoa(res.Message.Chat.ID))
+	}
 
-	message := tgbotapi.NewMessage(update.Message.Chat.ID, strings.Join(items, "\n\n"))
-	message.ReplyToMessageID = update.Message.MessageID
+	selectedItems := utils.Filter(func(item utils.Product) bool {
+		return strings.Contains(strings.ToUpper(item.Name), strings.ToUpper(keyword))
+	}, utils.GetInStockItems())
 
-	bot.Send(message)
-}
+	items := utils.Map(func(product utils.Product) string {
+		return utils.BuildProductString(product)
+	}, selectedItems)
 
-func Run() {
-	loadTelegramBot()
+	if err != nil {
+		log.Panic(err)
+	}
 
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
+	if len(items) == 0 {
+		fmt.Println(keyword + "에 해당하는 제품이 아직 없어요.")
+		return
+	}
 
-	updates := bot.GetUpdatesChan(u)
+	for _, id := range chatIds {
+		baseURL := "https://api.telegram.org/bot" + token + "/sendMessage" + "?chat_id=" + id
 
-	inStockItems := utils.GetInStockItems()
+		for _, item := range items {
 
-	for update := range updates {
-		if update.Message != nil {
-			sendMessage(update, inStockItems)
+			res, err := http.Get(baseURL + "&text=" + item)
+
+			if err != nil {
+				log.Panic(err)
+			}
+
+			fmt.Println(res)
 		}
 	}
 }

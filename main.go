@@ -1,9 +1,9 @@
 package main
 
 import (
-	"main.go/utils"
+	"main.go/telegram"
 )
 
 func main() {
-	utils.CrawlPage(1)
+	telegram.Run("jazzking")
 }
