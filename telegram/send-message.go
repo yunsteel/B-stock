@@ -38,6 +38,7 @@ func Run(keyword string) {
 	}
 
 	chatIds := []string{}
+
 	for _, res := range update.Result {
 		chatIds = append(chatIds, strconv.Itoa(res.Message.Chat.ID))
 	}
@@ -50,11 +51,7 @@ func Run(keyword string) {
 		return utils.BuildProductString(product)
 	}, selectedItems)
 
-	if err != nil {
-		log.Panic(err)
-	}
-
-	if len(items) == 0 {
+	if len(selectedItems) == 0 {
 		fmt.Println(keyword + "에 해당하는 제품이 아직 없어요.")
 		return
 	}

@@ -1,7 +1,6 @@
 name: Run 🚀
 
 on:
-  push:
   schedule:
     - cron: '0 * * * *' # 1시간마다 실행하기
 jobs:
