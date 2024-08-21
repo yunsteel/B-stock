@@ -44,7 +44,7 @@ func Run(keyword string) {
 	}
 
 	selectedItems := utils.Filter(func(item utils.Product) bool {
-		return strings.Contains(strings.ToUpper(item.Name), strings.ToUpper(keyword))
+		return strings.Contains(item.Name, keyword)
 	}, utils.GetInStockItems())
 
 	items := utils.Map(func(product utils.Product) string {
