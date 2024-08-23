@@ -40,6 +40,7 @@ func Run(keyword string) {
 	chatIds := []string{}
 
 	for _, res := range update.Result {
+		fmt.Println(res)
 		chatIds = append(chatIds, strconv.Itoa(res.Message.Chat.ID))
 	}
 
