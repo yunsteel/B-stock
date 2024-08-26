@@ -2,7 +2,7 @@ name: Run 🚀
 
 on:
   schedule:
-    - cron: '0 * * * *' # 1시간마다 실행하기
+    - cron: '*/30 * * * *' # 30분마다 실행하기
 jobs:
   go:
     runs-on: ubuntu-latest
